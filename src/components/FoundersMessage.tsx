@@ -72,7 +72,7 @@ export default function FoundersMessage() {
 
                 <div className="relative aspect-square rounded-full overflow-hidden border-4 border-cyan-500/30 group-hover:border-cyan-400/50 transition-all duration-500 shadow-2xl shadow-cyan-500/20">
                   <img
-                    src="/founder-photo.jpg"
+                    src="founder-photo.jpg"
                     alt="Adla Vijwal - Founder of InnovBridge"
                     className="w-full h-full object-cover"
                     onError={(e) => {
