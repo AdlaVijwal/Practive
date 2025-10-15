@@ -230,22 +230,14 @@ async function sendEmail(to: string, subject: string, html: string): Promise<boo
       `--${boundary}--`,
     ].join('\r\n');
 
-    const response = await fetch(`https://api.elasticemail.com/v2/email/send`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: new URLSearchParams({
-        apikey: SMTP_CONFIG.pass,
-        from: SMTP_CONFIG.user,
-        to: to,
-        subject: subject,
-        bodyHtml: html,
-        fromName: 'InnovBridge',
-      }),
+    await transporter.sendMail({
+      from: `"InnovBridge" <${SMTP_CONFIG.user}>`,
+      to,
+      subject,
+      html,
     });
 
-    return response.ok;
+    return true;
   } catch (error) {
     console.error('Email send error:', error);
     return false;
