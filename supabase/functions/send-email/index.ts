@@ -1,9 +1,16 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import nodemailer from "nodemailer";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
   "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Client-Info, Apikey",
+};
+const SMTP_CONFIG = {
+  host: Deno.env.get('SMTP_HOST') || 'smtp.zoho.com',
+  port: parseInt(Deno.env.get('SMTP_PORT') || '465'),
+  user: Deno.env.get('SMTP_USER') || 'hello@innovbridge.tech',
+  pass: Deno.env.get('SMTP_PASS') || ''
 };
 
 interface EmailRequest {
@@ -198,6 +205,16 @@ function getEmailTemplate(type: string, data: any): { subject: string; html: str
 
 async function sendEmail(to: string, subject: string, html: string): Promise<boolean> {
   try {
+    const transporter = nodemailer.createTransport({
+      host: SMTP_CONFIG.host,
+      port: SMTP_CONFIG.port,
+      secure: true, // use SSL for port 465
+      auth: {
+        user: SMTP_CONFIG.user,
+        pass: SMTP_CONFIG.pass,
+      },
+    });
+
     const boundary = '----InnovBridgeBoundary' + Date.now();
     const mailBody = [
       `From: InnovBridge <${SMTP_CONFIG.user}>`,
