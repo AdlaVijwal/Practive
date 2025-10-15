@@ -101,13 +101,19 @@ export default function Services() {
                         </li>
                       ))}
                     </ul>
-
-                    <button className="mt-8 inline-flex items-center gap-2 text-cyan-400 font-semibold hover:gap-3 transition-all duration-300 group/btn">
-                      Learn More
-                      <span className="text-xl group-hover/btn:translate-x-1 transition-transform">
-                        →
-                      </span>
-                    </button>
+                    {service.learn_more_link && (
+                      <a
+                        href={service.learn_more_link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-8 inline-flex items-center gap-2 text-cyan-400 font-semibold hover:gap-3 transition-all duration-300 group/btn"
+                      >
+                        Learn More
+                        <span className="text-xl group-hover/btn:translate-x-1 transition-transform">
+                          →
+                        </span>
+                      </a>
+                    )}
                   </div>
                 </div>
               );

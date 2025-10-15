@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { supabase } from "../lib/supabase";
+import { sendEmail } from "../lib/supabase";
+import toast, { Toaster } from "react-hot-toast";
 import {
   Mail,
   User,
@@ -52,11 +54,27 @@ export default function Contact() {
 
     try {
       const { error } = await supabase
-        .from("contact_submissions")
+        .from("contact_messages")
         .insert([formData]);
 
       if (error) throw error;
 
+      // Send confirmation to user
+      await sendEmail("contact_confirmation", formData.email, {
+        name: formData.name,
+        subject: formData.subject,
+        message: formData.message,
+      });
+
+      // Send notification to admin
+      await sendEmail("contact_notification", "hello@innovbridge.tech", {
+        name: formData.name,
+        to: formData.email,
+        subject: formData.subject,
+        message: formData.message,
+      });
+
+      toast.success("Message sent successfully!");
       setStatusMessage(
         "Message sent successfully! We will get back to you soon."
       );
@@ -64,6 +82,7 @@ export default function Contact() {
       setFormData({ name: "", email: "", subject: "", message: "" });
     } catch (error) {
       console.error("Error sending message:", error);
+      toast.error("Something went wrong. Please try again.");
       setStatusMessage(
         "Something went wrong. Please try again or email us directly at hello@innovbridge.tech"
       );
@@ -300,4 +319,5 @@ export default function Contact() {
       </div>
     </section>
   );
+  <Toaster position="top-center" />;
 }

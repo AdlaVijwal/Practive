@@ -15,10 +15,8 @@ interface EmailRequest {
 }
 
 const SMTP_CONFIG = {
-  host: Deno.env.get('SMTP_HOST') || 'smtp.zoho.com',
-  port: parseInt(Deno.env.get('SMTP_PORT') || '465'),
-  user: Deno.env.get('SMTP_USER') || 'hello@innovbridge.tech',
-  pass: Deno.env.get('SMTP_PASS') || '',
+  user: 'hello@innovbridge.tech',
+  pass: 'DEB6237C127EE6E469CA4F23EFF57C3DF07358CA28EAAE5693ABBEDD10ODE4A6F530C6F883BC5C7290D3D89F858A0D77',
 };
 
 function getEmailTemplate(type: string, data: any): { subject: string; html: string } {

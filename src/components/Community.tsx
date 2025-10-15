@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { supabase } from "../lib/supabase";
+import { sendEmail } from "../lib/supabase";
+import toast, { Toaster } from "react-hot-toast";
 import {
   Users,
   Zap,
@@ -67,30 +69,31 @@ export default function Community() {
 
     try {
       const { error } = await supabase
-        .from("newsletter_subscribers")
+        .from("community_members")
         .insert([{ email, frequency: "weekly" }]);
 
       if (error) {
         if (error.code === "23505") {
+          toast.error("You are already part of our community!");
           setMessage("You are already part of our community!");
         } else {
           throw error;
         }
         setStatus("error");
       } else {
-        setMessage(
-          "Welcome to the InnovBridge community! Check your inbox at hello@innovbridge.tech for confirmation."
-        );
+        await sendEmail("community_welcome", email);
+        toast.success("Welcome to the InnovBridge community!");
+        setMessage("Welcome to the InnovBridge community! Check your inbox.");
         setStatus("success");
         setEmail("");
       }
     } catch (error) {
       console.error("Error subscribing:", error);
+      toast.error("Something went wrong. Please try again.");
       setMessage("Something went wrong. Please try again.");
       setStatus("error");
     }
   }
-
   return (
     <section id="community" className="relative py-24 bg-black overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-br from-blue-900/10 via-black to-cyan-900/10" />
@@ -270,4 +273,5 @@ export default function Community() {
       `}</style>
     </section>
   );
+  <Toaster position="top-center" />;
 }
