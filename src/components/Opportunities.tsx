@@ -146,9 +146,9 @@ export default function Opportunities() {
                     {opportunity.description}
                   </p>
 
-                  {opportunity.apply_url && (
+                  {opportunity.link && (
                     <a
-                      href={opportunity.apply_url}
+                      href={opportunity.link}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold rounded-lg hover:shadow-lg hover:shadow-blue-500/30 transition-all duration-300 hover:gap-3"
