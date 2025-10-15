@@ -1,5 +1,5 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
-import { SmtpClient } from "https://deno.land/x/smtp/mod.ts";
+import nodemailer from "nodemailer";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -11,7 +11,7 @@ const SMTP_CONFIG = {
   host: Deno.env.get('SMTP_HOST') || 'smtp.zoho.com',
   port: parseInt(Deno.env.get('SMTP_PORT') || '465'),
   user: Deno.env.get('SMTP_USER') || 'hello@innovbridge.tech',
-  pass: Deno.env.get('SMTP_PASS') || ''
+  pass: Deno.env.get('SMTP_PASS') || '',
 };
 
 interface EmailRequest {
@@ -197,34 +197,31 @@ function getEmailTemplate(type: string, data: any): { subject: string; html: str
   return templates[type] || { subject: 'InnovBridge', html: '<p>Email from InnovBridge</p>' };
 }
 
-// ------------------------- UPDATED sendEmail -------------------------
 async function sendEmail(to: string, subject: string, html: string): Promise<boolean> {
   try {
-    const client = new SmtpClient();
-    await client.connect({
-      hostname: SMTP_CONFIG.host,
+    const transporter = nodemailer.createTransport({
+      host: SMTP_CONFIG.host,
       port: SMTP_CONFIG.port,
-      username: SMTP_CONFIG.user,
-      password: SMTP_CONFIG.pass,
       secure: true,
+      auth: {
+        user: SMTP_CONFIG.user,
+        pass: SMTP_CONFIG.pass,
+      },
     });
 
-    await client.send({
-      from: SMTP_CONFIG.user,
+    await transporter.sendMail({
+      from: `"InnovBridge" <${SMTP_CONFIG.user}>`,
       to,
       subject,
-      content: html,
-      contentType: "text/html",
+      html,
     });
 
-    await client.close();
     return true;
   } catch (error) {
-    console.error("Email send error:", error);
+    console.error('Email send error:', error);
     return false;
   }
 }
-// ------------------------- END UPDATED sendEmail -------------------------
 
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') {
@@ -238,11 +235,7 @@ Deno.serve(async (req: Request) => {
     const sent = await sendEmail(to, template.subject, template.html);
 
     if (type === 'contact_notification') {
-      await sendEmail(
-        SMTP_CONFIG.user,
-        template.subject,
-        template.html
-      );
+      await sendEmail(SMTP_CONFIG.user, template.subject, template.html);
     }
 
     return new Response(
