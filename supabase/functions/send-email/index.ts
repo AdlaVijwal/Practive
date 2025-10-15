@@ -1,11 +1,12 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
-import nodemailer from "nodemailer";
+import { SmtpClient } from "https://deno.land/x/smtp/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
   "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Client-Info, Apikey",
 };
+
 const SMTP_CONFIG = {
   host: Deno.env.get('SMTP_HOST') || 'smtp.zoho.com',
   port: parseInt(Deno.env.get('SMTP_PORT') || '465'),
@@ -20,13 +21,6 @@ interface EmailRequest {
   subject?: string;
   message?: string;
 }
-
-const SMTP_CONFIG = {
-  host: Deno.env.get('SMTP_HOST') || 'smtp.zoho.com',
-  port: parseInt(Deno.env.get('SMTP_PORT') || '465'),
-  user: Deno.env.get('SMTP_USER') || 'hello@innovbridge.tech',
-  pass: Deno.env.get('SMTP_PASS') || '',
-};
 
 function getEmailTemplate(type: string, data: any): { subject: string; html: string } {
   const templates: Record<string, any> = {
@@ -203,46 +197,34 @@ function getEmailTemplate(type: string, data: any): { subject: string; html: str
   return templates[type] || { subject: 'InnovBridge', html: '<p>Email from InnovBridge</p>' };
 }
 
+// ------------------------- UPDATED sendEmail -------------------------
 async function sendEmail(to: string, subject: string, html: string): Promise<boolean> {
   try {
-    const transporter = nodemailer.createTransport({
-      host: SMTP_CONFIG.host,
+    const client = new SmtpClient();
+    await client.connect({
+      hostname: SMTP_CONFIG.host,
       port: SMTP_CONFIG.port,
-      secure: true, // use SSL for port 465
-      auth: {
-        user: SMTP_CONFIG.user,
-        pass: SMTP_CONFIG.pass,
-      },
+      username: SMTP_CONFIG.user,
+      password: SMTP_CONFIG.pass,
+      secure: true,
     });
 
-    const boundary = '----InnovBridgeBoundary' + Date.now();
-    const mailBody = [
-      `From: InnovBridge <${SMTP_CONFIG.user}>`,
-      `To: ${to}`,
-      `Subject: ${subject}`,
-      `MIME-Version: 1.0`,
-      `Content-Type: multipart/alternative; boundary="${boundary}"`,
-      '',
-      `--${boundary}`,
-      'Content-Type: text/html; charset=utf-8',
-      '',
-      html,
-      `--${boundary}--`,
-    ].join('\r\n');
-
-    await transporter.sendMail({
-      from: `"InnovBridge" <${SMTP_CONFIG.user}>`,
+    await client.send({
+      from: SMTP_CONFIG.user,
       to,
       subject,
-      html,
+      content: html,
+      contentType: "text/html",
     });
 
+    await client.close();
     return true;
   } catch (error) {
-    console.error('Email send error:', error);
+    console.error("Email send error:", error);
     return false;
   }
 }
+// ------------------------- END UPDATED sendEmail -------------------------
 
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') {
