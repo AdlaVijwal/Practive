@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { supabase } from "../lib/supabase";
 import { Mail, CheckCircle, AlertCircle, Send } from "lucide-react";
+import { sendEmail } from "../lib/supabase";
+import toast, { Toaster } from "react-hot-toast";
 
 export default function Newsletter() {
   const [email, setEmail] = useState("");
@@ -22,12 +24,15 @@ export default function Newsletter() {
 
       if (error) {
         if (error.code === "23505") {
+          toast.error("You are already subscribed to our newsletter!");
           setMessage("You are already subscribed to our newsletter!");
         } else {
           throw error;
         }
         setStatus("error");
       } else {
+        await sendEmail("newsletter_welcome", email);
+        toast.success("Successfully subscribed! Check your inbox.");
         setMessage(
           "Successfully subscribed! Check your inbox for confirmation."
         );
@@ -37,6 +42,7 @@ export default function Newsletter() {
       }
     } catch (error) {
       console.error("Error subscribing:", error);
+      toast.error("Something went wrong. Please try again.");
       setMessage("Something went wrong. Please try again.");
       setStatus("error");
     }
@@ -191,4 +197,5 @@ export default function Newsletter() {
       </div>
     </section>
   );
+  <Toaster position="top-center" />;
 }
