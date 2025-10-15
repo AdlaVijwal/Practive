@@ -1,17 +1,9 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
-import nodemailer from "nodemailer";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
   "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Client-Info, Apikey",
-};
-
-const SMTP_CONFIG = {
-  host: Deno.env.get('SMTP_HOST') || 'smtp.zoho.com',
-  port: parseInt(Deno.env.get('SMTP_PORT') || '465'),
-  user: Deno.env.get('SMTP_USER') || 'hello@innovbridge.tech',
-  pass: Deno.env.get('SMTP_PASS') || '',
 };
 
 interface EmailRequest {
@@ -21,6 +13,11 @@ interface EmailRequest {
   subject?: string;
   message?: string;
 }
+
+const SMTP_CONFIG = {
+  user: Deno.env.get('ELASTIC_EMAIL_USER') || 'hello@innovbridge.tech',
+  pass: Deno.env.get('ELASTIC_EMAIL_API_KEY') || '15C8FB0349CE9319FE5B7B547CA1040E8B2B',
+};
 
 function getEmailTemplate(type: string, data: any): { subject: string; html: string } {
   const templates: Record<string, any> = {
@@ -199,24 +196,37 @@ function getEmailTemplate(type: string, data: any): { subject: string; html: str
 
 async function sendEmail(to: string, subject: string, html: string): Promise<boolean> {
   try {
-    const transporter = nodemailer.createTransport({
-      host: SMTP_CONFIG.host,
-      port: SMTP_CONFIG.port,
-      secure: true,
-      auth: {
-        user: SMTP_CONFIG.user,
-        pass: SMTP_CONFIG.pass,
-      },
-    });
-
-    await transporter.sendMail({
-      from: `"InnovBridge" <${SMTP_CONFIG.user}>`,
-      to,
-      subject,
+    const boundary = '----InnovBridgeBoundary' + Date.now();
+    const mailBody = [
+      `From: InnovBridge <${SMTP_CONFIG.user}>`,
+      `To: ${to}`,
+      `Subject: ${subject}`,
+      `MIME-Version: 1.0`,
+      `Content-Type: multipart/alternative; boundary="${boundary}"`,
+      '',
+      `--${boundary}`,
+      'Content-Type: text/html; charset=utf-8',
+      '',
       html,
+      `--${boundary}--`,
+    ].join('\r\n');
+
+    const response = await fetch(`https://api.elasticemail.com/v2/email/send`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: new URLSearchParams({
+        apikey: SMTP_CONFIG.pass,
+        from: SMTP_CONFIG.user,
+        to: to,
+        subject: subject,
+        bodyHtml: html,
+        fromName: 'InnovBridge',
+      }),
     });
 
-    return true;
+    return response.ok;
   } catch (error) {
     console.error('Email send error:', error);
     return false;
@@ -235,7 +245,11 @@ Deno.serve(async (req: Request) => {
     const sent = await sendEmail(to, template.subject, template.html);
 
     if (type === 'contact_notification') {
-      await sendEmail(SMTP_CONFIG.user, template.subject, template.html);
+      await sendEmail(
+        SMTP_CONFIG.user,
+        template.subject,
+        template.html
+      );
     }
 
     return new Response(
