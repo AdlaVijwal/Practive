@@ -1,0 +1,6 @@
+{
+  "name": "create-checkout-session",
+  "runtime": "deno",
+  "methods": ["POST", "OPTIONS"],
+  "version": "1.0.0"
+}

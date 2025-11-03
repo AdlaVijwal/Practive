@@ -9,17 +9,16 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-export interface TechUpdate {
+export interface Service {
   id: string;
   title: string;
-  content: string;
-  excerpt: string;
-  description?: string;
-  category: string;
-  image_url?: string;
-  published: boolean;
-  created_at: string;
-  updated_at: string;
+  description: string;
+  icon: string;
+  features: string[];
+  active: boolean;
+  order_index: number;
+  learn_more_link?: string;
+  icon_url?: string;
 }
 
 export interface Opportunity {
@@ -36,35 +35,6 @@ export interface Opportunity {
   expires_at?: string;
 }
 
-export interface Service {
-  id: string;
-  title: string;
-  description: string;
-  icon: string;
-  features: string[];
-  active: boolean;
-  order_index: number;
-  learn_more_link?: string;
-  icon_url?: string;
-}
-
-export interface NewsletterSubscriber {
-  id?: string;
-  email: string;
-  frequency: string;
-  subscribed_at?: string;
-  verified?: boolean;
-  active?: boolean;
-}
-
-export interface CommunityMember {
-  id?: string;
-  email: string;
-  frequency: string;
-  joined_at?: string;
-  active?: boolean;
-}
-
 export interface ContactMessage {
   id?: string;
   name: string;
@@ -76,7 +46,19 @@ export interface ContactMessage {
   responded?: boolean;
 }
 
-export async function sendEmail(type: string, to: string, data?: any) {
+export interface StudentRequest {
+  id: string;
+  request_type: 'resume' | 'project' | 'ppt';
+  email: string;
+  data: Record<string, unknown>;
+  paid: boolean;
+  stripe_session_id?: string;
+  status: 'pending' | 'processing' | 'completed' | 'cancelled';
+  created_at: string;
+  updated_at: string;
+}
+
+export async function sendEmail(type: string, to: string, data?: Record<string, unknown>) {
   try {
     const response = await fetch(
       `${supabaseUrl}/functions/v1/send-email`,

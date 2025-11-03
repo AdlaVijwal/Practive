@@ -1,45 +1,4 @@
-/*
-  # Enhance InnovBridge Schema for Dynamic Features
 
-  ## Overview
-  Updates existing tables and adds new tables for complete admin control and email automation.
-
-  ## Updates to Existing Tables
-  
-  ### tech_updates
-  - Add admin management capabilities
-  - Ensure proper date tracking
-  
-  ### opportunities
-  - Add link field for Apply/Learn More buttons
-  - Add status tracking
-  
-  ### services
-  - Add learn_more_link field
-  - Add icon_url for custom icons
-
-  ## New Tables
-
-  ### community_members
-  - Separate from newsletter for community-specific features
-  - Track frequency preferences (daily/weekly)
-  
-  ### contact_messages
-  - Store all contact form submissions
-  - Track read status and response status
-
-  ## Security
-  - RLS enabled on all tables
-  - Admin policies for management
-  - Public read for published content
-
-  ## Important Notes
-  - All email automation handled via Edge Functions
-  - Admin access controlled via Supabase Auth
-  - Data integrity maintained with constraints
-*/
-
--- Update tech_updates table (add missing columns if needed)
 DO $$
 BEGIN
   IF NOT EXISTS (

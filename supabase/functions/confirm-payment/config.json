@@ -1,0 +1,6 @@
+{
+  "name": "confirm-payment",
+  "runtime": "deno",
+  "methods": ["GET", "POST", "OPTIONS"],
+  "version": "1.0.0"
+}

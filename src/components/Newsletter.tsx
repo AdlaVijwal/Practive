@@ -18,33 +18,50 @@ export default function Newsletter() {
     setMessage("");
 
     try {
-      const { error } = await supabase
+      // First, try to insert into database
+      const { error: dbError } = await supabase
         .from("newsletter_subscribers")
         .insert([{ email, frequency }]);
 
-      if (error) {
-        if (error.code === "23505") {
+      if (dbError) {
+        if (dbError.code === "23505") {
           toast.error("You are already subscribed to our newsletter!");
           setMessage("You are already subscribed to our newsletter!");
-        } else {
-          throw error;
+          setStatus("error");
+          return;
         }
-        setStatus("error");
-      } else {
-        await sendEmail("newsletter_welcome", email);
-        toast.success("Successfully subscribed! Check your inbox.");
-        setMessage(
-          "Successfully subscribed! Check your inbox for confirmation."
-        );
-        setStatus("success");
-        setEmail("");
-        setFrequency("weekly");
+        throw dbError;
       }
+
+      // Then send the welcome email
+      const emailResult = await sendEmail("newsletter_welcome", email, {
+        name: email.split("@")[0], // Use part before @ as name
+        requestData: {
+          frequency: frequency,
+        },
+      });
+
+      if (!emailResult) {
+        throw new Error("Failed to send welcome email");
+      }
+
+      toast.success("Successfully subscribed! Check your inbox.");
+      setMessage("Successfully subscribed! Check your inbox for confirmation.");
+      setStatus("success");
+      setEmail("");
+      setFrequency("weekly");
     } catch (error) {
       console.error("Error subscribing:", error);
       toast.error("Something went wrong. Please try again.");
-      setMessage("Something went wrong. Please try again.");
+      setMessage("Something went wrong. Please try again later.");
       setStatus("error");
+
+      // If this was a database error, try to rollback the subscription
+      try {
+        await supabase.from("newsletter_subscribers").delete().match({ email });
+      } catch (rollbackError) {
+        console.error("Error rolling back subscription:", rollbackError);
+      }
     }
   }
 

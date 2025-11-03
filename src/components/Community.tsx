@@ -68,30 +68,73 @@ export default function Community() {
     setMessage("");
 
     try {
-      const { error } = await supabase
+      // First, try to insert into database
+      const { error: dbError } = await supabase
         .from("community_members")
-        .insert([{ email, frequency: "weekly" }]);
+        .insert([
+          {
+            email,
+            frequency: "weekly",
+            active: true,
+          },
+        ]);
 
-      if (error) {
-        if (error.code === "23505") {
+      if (dbError) {
+        if (dbError.code === "23505") {
           toast.error("You are already part of our community!");
           setMessage("You are already part of our community!");
-        } else {
-          throw error;
+          setStatus("error");
+          return;
         }
-        setStatus("error");
-      } else {
-        await sendEmail("community_welcome", email);
-        toast.success("Welcome to the InnovBridge community!");
-        setMessage("Welcome to the InnovBridge community! Check your inbox.");
-        setStatus("success");
-        setEmail("");
+        throw dbError;
       }
-    } catch (error) {
+
+      // Then send the welcome email
+      const emailResult = await sendEmail("community_welcome", email, {
+        requestData: {
+          name: email.split("@")[0],
+          frequency: "weekly",
+        },
+      });
+
+      if (!emailResult) {
+        throw new Error("Failed to send welcome email");
+      }
+
+      toast.success("Welcome to the InnovBridge community!");
+      setMessage(
+        "Welcome to the InnovBridge community! Check your inbox for a welcome message."
+      );
+      setStatus("success");
+      setEmail("");
+    } catch (error: any) {
       console.error("Error subscribing:", error);
-      toast.error("Something went wrong. Please try again.");
-      setMessage("Something went wrong. Please try again.");
+
+      // More specific error messages based on the error type
+      if (error?.message?.includes("Failed to send welcome email")) {
+        toast.error(
+          "Joined community but couldn't send welcome email. You'll still receive our updates!"
+        );
+        setMessage(
+          "Welcome! You're in, but we couldn't send the welcome email. Don't worry, you're still subscribed!"
+        );
+      } else {
+        toast.error("Something went wrong. Please try again.");
+        setMessage(
+          "Something went wrong. Please try again or contact support."
+        );
+      }
+
       setStatus("error");
+
+      // If this was a database error, try to rollback
+      if (error?.message?.includes("send welcome email")) {
+        try {
+          await supabase.from("community_members").delete().match({ email });
+        } catch (rollbackError) {
+          console.error("Error rolling back subscription:", rollbackError);
+        }
+      }
     }
   }
   return (

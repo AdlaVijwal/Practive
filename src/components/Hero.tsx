@@ -38,23 +38,23 @@ export default function Hero() {
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-in-delay-2">
           <a
-            href="#updates"
+            href="#student-hub"
             className="group relative px-8 py-4 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold rounded-lg overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-blue-500/50 hover:scale-105 w-full sm:w-auto"
           >
             <span className="relative z-10 flex items-center justify-center gap-2">
-              Explore Updates
+              Student Hub
               <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </span>
             <div className="absolute inset-0 bg-gradient-to-r from-blue-700 to-cyan-700 opacity-0 group-hover:opacity-100 transition-opacity" />
           </a>
 
           <a
-            href="#newsletter"
+            href="#contact"
             className="group px-8 py-4 bg-white/5 backdrop-blur-sm border border-white/10 text-white font-semibold rounded-lg transition-all duration-300 hover:bg-white/10 hover:border-cyan-400/50 hover:shadow-lg hover:shadow-cyan-500/20 hover:scale-105 w-full sm:w-auto"
           >
             <span className="flex items-center justify-center gap-2">
               <Zap className="w-5 h-5 text-cyan-400" />
-              Join the Future
+              Contact Us
             </span>
           </a>
         </div>
